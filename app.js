@@ -1,4 +1,4 @@
-// node main.js
+// node app.js
 const puppeteer = require('puppeteer');
 const credentials = require('./credentials');
 
@@ -11,7 +11,7 @@ const domain = `${amazon}?almBrandId=VUZHIFdob2xlIEZvb2Rz&ref_=nav_cs_whole_food
     const browser = await puppeteer.launch({
       headless: false,
       timeout: 10000,
-      args: ['--window-size=1800,1000'], // This specifies the Chrome window size
+      args: ['--window-size=1200,1200'], // This specifies the Chrome window size
     });
 
     // create a page inside the browser;
@@ -19,7 +19,7 @@ const domain = `${amazon}?almBrandId=VUZHIFdob2xlIEZvb2Rz&ref_=nav_cs_whole_food
     page.setDefaultTimeout(600000);
 
     // navigate to a website and set the viewport
-    await page.setViewport({ width: 1800, height: 1000 });
+    await page.setViewport({ width: 1200, height: 1000 });
     await page.goto(domain, {
       timeout: 3000000,
     });
@@ -67,25 +67,54 @@ const domain = `${amazon}?almBrandId=VUZHIFdob2xlIEZvb2Rz&ref_=nav_cs_whole_food
     await page.waitForSelector('.ufss-widget-grid');
 
     // Refresh the page every 5 seconds until a delivery time window appears
-    setInterval(async () => {
-      const noDeliveryTimeWindow = await page.evaluate(() => {
-        const string = 'No delivery windows available';
-        const selector = '.a-alert-heading';
-        const alertHeadings = document.querySelectorAll(selector);
-        let noDeliveryTime = false;
-        alertHeadings.forEach((ele) => {
-          if (ele.innerText.includes(string)) {
-            noDeliveryTime = true;
-          }
+    // Ring the system bell when delivery time slots become available
+    let isFree = false;
+    const reloadTimer = setInterval(async () => {
+      if (!isFree) {
+        isFree = await page.evaluate(() => {
+          const string = 'FREE';
+          const selector = '.ufss-slot-price-text';
+          const freeSlots = document.querySelectorAll(selector);
+          let isDeliveryAvailable = false;
+          freeSlots.forEach((ele) => {
+            if (ele.innerText.includes(string)) {
+              isDeliveryAvailable = true;
+            }
+          });
+          return isDeliveryAvailable;
         });
-        return noDeliveryTime;
-      });
+      }
 
-      if (!noDeliveryTimeWindow) {
+      if (isFree) {
         console.log('\u0007');
+        console.log('Delivery window is available. Select a time slot and click Continue');
       } else {
         console.log('No delivery windows available. Refresh the page...');
         await page.reload();
+      }
+    }, 5000);
+
+    // Stop the refresh after selecting the time slot and clicking the Continue button
+    // Do it manually starting from here
+    setInterval(async () => {
+      if (!isFree) {
+        return;
+      }
+      const isContinueClicked = await page.evaluate(() => {
+        const string = 'FREE';
+        const selector = '.ufss-slot-price-text';
+        const freeSlots = document.querySelectorAll(selector);
+        let isClicked = true;
+        freeSlots.forEach((ele) => {
+          if (ele.innerText.includes(string)) {
+            isClicked = false;
+          }
+        });
+        return isClicked;
+      });
+
+      if (isFree && isContinueClicked) {
+        clearInterval(reloadTimer);
       }
     }, 5000);
 
