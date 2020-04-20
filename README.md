@@ -16,6 +16,8 @@ module.exports = {
 ```
 
 ## Run the script
+Before running this script, you need to add what you want to buy in the shopping cart first. This script sends you a notification if a delivery window becomes available.
+
 ```bash
 node app.js
 ```
