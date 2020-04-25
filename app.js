@@ -11,7 +11,7 @@ const domain = `${amazon}?almBrandId=VUZHIFdob2xlIEZvb2Rz&ref_=nav_cs_whole_food
     const browser = await puppeteer.launch({
       headless: false,
       timeout: 10000,
-      args: ['--window-size=1200,1200'], // This specifies the Chrome window size
+      args: ['--window-size=1200,800'], // This specifies the Chrome window size
     });
 
     // create a page inside the browser;
@@ -19,7 +19,7 @@ const domain = `${amazon}?almBrandId=VUZHIFdob2xlIEZvb2Rz&ref_=nav_cs_whole_food
     page.setDefaultTimeout(600000);
 
     // navigate to a website and set the viewport
-    await page.setViewport({ width: 1200, height: 1000 });
+    await page.setViewport({ width: 1200, height: 600 });
     await page.goto(domain, {
       timeout: 3000000,
     });
@@ -72,12 +72,11 @@ const domain = `${amazon}?almBrandId=VUZHIFdob2xlIEZvb2Rz&ref_=nav_cs_whole_food
     const reloadTimer = setInterval(async () => {
       if (!isFree) {
         isFree = await page.evaluate(() => {
-          const string = 'FREE';
           const selector = '.ufss-slot-price-text';
           const freeSlots = document.querySelectorAll(selector);
           let isDeliveryAvailable = false;
           freeSlots.forEach((ele) => {
-            if (ele.innerText.includes(string)) {
+            if (ele.innerText.includes('FREE') || ele.innerText.includes('$4.99')) {
               isDeliveryAvailable = true;
             }
           });
