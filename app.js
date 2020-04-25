@@ -100,12 +100,11 @@ const domain = `${amazon}?almBrandId=VUZHIFdob2xlIEZvb2Rz&ref_=nav_cs_whole_food
         return;
       }
       const isContinueClicked = await page.evaluate(() => {
-        const string = 'FREE';
         const selector = '.ufss-slot-price-text';
         const freeSlots = document.querySelectorAll(selector);
         let isClicked = true;
         freeSlots.forEach((ele) => {
-          if (ele.innerText.includes(string)) {
+          if (ele.innerText.includes('FREE') || ele.innerText.includes('$4.99')) {
             isClicked = false;
           }
         });
